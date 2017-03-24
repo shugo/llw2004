@@ -1,0 +1,28 @@
+= ls-lR.rbのREADME
+
+== 使われているデザインパターン
+
+: Commandパターン
+
+    Commandクラスとそのサブクラス
+
+: Compositeパターン
+
+    Node, FileNode, DirectoryNode
+    Expressionクラスとそのサブクラス
+
+: Visitorパターン
+
+    Node, FileNode, DirectoryNode, SearchCommand
+
+: NullObjectパターン
+
+    NullCommand, NullExpression
+
+: Interpreterパターン
+
+    Expression#evaluate
+
+: Strategyパターン
+
+    SearchCommand, DfsScheduler, BfsScheduler

@@ -1,0 +1,1373 @@
+%!PS-Adobe-3.0
+%%Title: ls-lR.rb
+%%For: Shugo Maeda
+%%Creator: a2ps version 4.13
+%%CreationDate: Fri Aug  6 14:54:09 2004
+%%BoundingBox: 24 24 571 818
+%%DocumentData: Clean7Bit
+%%Orientation: Portrait
+%%Pages: 2
+%%PageOrder: Ascend
+%%DocumentMedia: A4 595 842 0 () ()
+%%DocumentNeededResources: font Courier
+%%+ font Courier-Bold
+%%+ font Courier-BoldOblique
+%%+ font Courier-Oblique
+%%+ font Helvetica
+%%+ font Helvetica-Bold
+%%+ font Symbol
+%%+ font Times-Bold
+%%+ font Times-Roman
+%%DocumentProcessColors: Black 
+%%DocumentSuppliedResources: procset a2ps-a2ps-hdr
+%%+ procset a2ps-black+white-Prolog
+%%+ encoding ISO-8859-1Encoding
+%%EndComments
+/a2psdict 200 dict def
+a2psdict begin
+%%BeginProlog
+%%Copyright: (c) 1988, 89, 90, 91, 92, 93 Miguel Santana
+%%Copyright: (c) 1995, 96, 97, 98 Akim Demaille, Miguel Santana
+% Check PostScript language level.
+/languagelevel where {
+  pop /gs_languagelevel languagelevel def
+} {
+  /gs_languagelevel 1 def
+} ifelse
+
+% EPSF import as in the Red Book
+/BeginInclude {
+  /b4_Inc_state save def    		% Save state for cleanup
+  /dict_count countdictstack def	% Count objects on dict stack
+  /op_count count 1 sub def		% Count objects on operand stack 
+  userdict begin
+    0 setgray 0 setlinecap
+    1 setlinewidth 0 setlinejoin
+    10 setmiterlimit [ ] 0 setdash newpath
+    gs_languagelevel 1 ne {
+      false setstrokeadjust false setoverprint 
+    } if
+} bind def
+
+/EndInclude {
+  count op_count sub { pos } repeat	% Clean up stacks
+  countdictstack dict_count sub { end } repeat
+  b4_Inc_state restore
+} bind def
+
+/BeginEPSF {
+  BeginInclude
+  /showpage { } def
+} bind def
+
+/EndEPSF {
+  EndInclude
+} bind def
+
+% Page prefeed
+/page_prefeed {         % bool -> -
+  statusdict /prefeed known {
+    statusdict exch /prefeed exch put
+  } {
+    pop
+  } ifelse
+} bind def
+
+/deffont {
+  findfont exch scalefont def
+} bind def
+
+/reencode_font {
+  findfont reencode 2 copy definefont pop def
+} bind def
+
+% Function c-show (str => -)
+% centers text only according to x axis.
+/c-show { 
+  dup stringwidth pop
+  2 div neg 0 rmoveto
+  show
+} bind def
+
+% Function l-show (str => -)
+% prints texts so that it ends at currentpoint
+/l-show {
+  dup stringwidth pop neg 
+  0 
+  rmoveto show
+} bind def
+
+% center-fit show (str w => -)
+% show centered, and scale currentfont so that the width is less than w
+/cfshow {
+  exch dup stringwidth pop
+  % If the title is too big, try to make it smaller
+  3 2 roll 2 copy
+  gt
+  { % if, i.e. too big
+    exch div
+    currentfont exch scalefont setfont
+  } { % ifelse
+    pop pop 
+  }
+  ifelse
+  c-show			% center title
+} bind def
+
+% Return the y size of the current font
+% - => fontsize
+/currentfontsize {
+  currentfont /FontType get 0 eq {
+    currentfont /FontMatrix get 3 get
+  }{
+    currentfont /FontMatrix get 3 get 1000 mul
+  } ifelse
+} bind def
+
+% reencode the font
+% <encoding-vector> <fontdict> -> <newfontdict>
+/reencode { %def
+  dup length 5 add dict begin
+    { %forall
+      1 index /FID ne 
+      { def }{ pop pop } ifelse
+    } forall
+    /Encoding exch def
+
+    % Use the font's bounding box to determine the ascent, descent,
+    % and overall height; don't forget that these values have to be
+    % transformed using the font's matrix.
+    % We use `load' because sometimes BBox is executable, sometimes not.
+    % Since we need 4 numbers an not an array avoid BBox from being executed
+    /FontBBox load aload pop
+    FontMatrix transform /Ascent exch def pop
+    FontMatrix transform /Descent exch def pop
+    /FontHeight Ascent Descent sub def
+
+    % Define these in case they're not in the FontInfo (also, here
+    % they're easier to get to.
+    /UnderlinePosition 1 def
+    /UnderlineThickness 1 def
+    
+    % Get the underline position and thickness if they're defined.
+    currentdict /FontInfo known {
+      FontInfo
+      
+      dup /UnderlinePosition known {
+	dup /UnderlinePosition get
+	0 exch FontMatrix transform exch pop
+	/UnderlinePosition exch def
+      } if
+      
+      dup /UnderlineThickness known {
+	/UnderlineThickness get
+	0 exch FontMatrix transform exch pop
+	/UnderlineThickness exch def
+      } if
+      
+    } if
+    currentdict 
+  end 
+} bind def
+
+% composite fonts for ASCII-EUC mixed strings
+% Version 1.2 1/31/1990
+% Original Ken'ichi HANDA (handa@etl.go.jp)
+% Modified Norio Katayama (katayama@rd.nacsis.ac.jp),1998
+% Extend & Fix Koji Nakamaru (maru@on.cs.keio.ac.jp), 1999
+% Anyone can freely copy, modify, distribute this program.
+
+/copyfont {	% font-dic extra-entry-count  copyfont  font-dic
+	1 index maxlength add dict begin
+	{	1 index /FID ne 2 index /UniqueID ne and
+		{def} {pop pop} ifelse
+	} forall
+	currentdict
+	end
+} bind def
+
+/compositefont { % ASCIIFontName EUCFontName RomanScale RomanOffset Rot(T/F) compositefont font
+    /RomanRotation exch def
+    /RomanOffset exch def
+    /RomanScale exch def
+    userdict /fixeucfont_dict known not {
+	userdict begin
+	    /fixeucfont_dict 2 dict begin
+		/UpperByteEncoding [
+		    16#00 1 16#20 { pop 0 } for
+		    16#21 1 16#28 { 16#20 sub } for
+		    16#29 1 16#2F { pop 0 } for
+		    16#30 1 16#74 { 16#27 sub } for
+		    16#75 1 16#FF { pop 0 } for
+		] def
+	        /LowerByteEncoding [
+		    16#00 1 16#A0 { pop /.notdef } for
+		    16#A1 1 16#FE { 16#80 sub 16 2 string cvrs
+				    (cXX) dup 1 4 -1 roll
+				    putinterval cvn } for
+		    /.notdef
+		] def
+		currentdict
+	    end def
+	end
+    } if
+    findfont dup /FontType get 0 eq {
+	14 dict begin
+	    %
+	    % 7+8 bit EUC font
+	    %
+	    12 dict begin
+		/EUCFont exch def
+		/FontInfo (7+8 bit EUC font) readonly def
+		/PaintType 0 def
+		/FontType 0 def
+		/FontMatrix matrix def
+		% /FontName
+		/Encoding fixeucfont_dict /UpperByteEncoding get def
+		/FMapType 2 def
+		EUCFont /WMode known
+		{ EUCFont /WMode get /WMode exch def }
+		{ /WMode 0 def } ifelse
+		/FDepVector [
+		    EUCFont /FDepVector get 0 get
+		    [ 16#21 1 16#28 {} for 16#30 1 16#74 {} for ]
+		    {
+			13 dict begin
+			    /EUCFont EUCFont def
+			    /UpperByte exch 16#80 add def	
+			    % /FontName
+			    /FontInfo (EUC lower byte font) readonly def
+			    /PaintType 0 def
+			    /FontType 3 def
+			    /FontMatrix matrix def
+			    /FontBBox {0 0 0 0} def
+			    /Encoding
+				fixeucfont_dict /LowerByteEncoding get def
+			    % /UniqueID
+			    % /WMode
+			    /BuildChar {
+				gsave
+				exch dup /EUCFont get setfont
+				/UpperByte get
+				2 string
+				dup 0 4 -1 roll put
+				dup 1 4 -1 roll put
+				dup stringwidth setcharwidth
+				0 0 moveto show
+				grestore
+			    } bind def
+			    currentdict
+			end
+			/lowerbytefont exch definefont
+		    } forall
+		] def
+		currentdict
+	    end
+	    /eucfont exch definefont
+	    exch
+	    findfont 1 copyfont dup begin
+		RomanRotation {
+			/FontMatrix FontMatrix
+			[ 0 RomanScale neg RomanScale 0 RomanOffset neg 0 ]
+			matrix concatmatrix def
+		}{
+			/FontMatrix FontMatrix
+			[ RomanScale 0 0 RomanScale 0 RomanOffset ] matrix concatmatrix
+			def
+			/CDevProc
+			    {pop pop pop pop 0 exch -1000 exch 2 div 880} def
+		} ifelse
+	    end
+	    /asciifont exch definefont
+	    exch
+	    /FDepVector [ 4 2 roll ] def
+	    /FontType 0 def
+	    /WMode 0 def
+	    /FMapType 4 def
+	    /FontMatrix matrix def
+	    /Encoding [0 1] def
+	    /FontBBox {0 0 0 0} def
+%	    /FontHeight 1.0 def % XXXX
+	    /FontHeight RomanScale 1.0 ge { RomanScale }{ 1.0 } ifelse def
+	    /Descent -0.3 def   % XXXX
+	    currentdict
+	end
+	/tmpfont exch definefont
+	pop
+	/tmpfont findfont
+    }{
+	pop findfont 0 copyfont
+    } ifelse
+} def	
+
+/slantfont {	% FontName slant-degree  slantfont  font'
+    exch findfont 1 copyfont begin
+    [ 1 0 4 -1 roll 1 0 0 ] FontMatrix exch matrix concatmatrix
+    /FontMatrix exch def
+    currentdict
+    end
+} def
+
+% Function print line number (<string> # -)
+/# {
+  gsave
+    sx cw mul neg 2 div 0 rmoveto
+    f# setfont
+    c-show
+  grestore
+} bind def
+
+% -------- Some routines to enlight plain b/w printings ---------
+
+% Underline
+% width --
+/dounderline {
+  currentpoint
+  gsave
+    moveto
+    0 currentfont /Descent get currentfontsize mul rmoveto
+    0 rlineto
+    stroke
+  grestore
+} bind def
+
+% Underline a string
+% string --
+/dounderlinestring {
+  stringwidth pop
+  dounderline
+} bind def
+
+/UL {
+  /ul exch store
+} bind def
+
+% Draw a box of WIDTH wrt current font
+% width --
+/dobox {
+  currentpoint
+  gsave
+    newpath
+    moveto
+    0 currentfont /Descent get currentfontsize mul rmoveto
+    dup 0 rlineto
+    0 currentfont /FontHeight get currentfontsize mul rlineto
+    neg 0 rlineto
+    closepath
+    stroke
+  grestore
+} bind def
+
+/BX {
+  /bx exch store
+} bind def
+
+% Box a string
+% string --
+/doboxstring {
+  stringwidth pop
+  dobox
+} bind def
+
+%
+% ------------- Color routines ---------------
+%
+/FG /setrgbcolor load def
+
+% Draw the background
+% width --
+/dobackground {
+  currentpoint
+  gsave
+    newpath
+    moveto
+    0 currentfont /Descent get currentfontsize mul rmoveto
+    dup 0 rlineto
+    0 currentfont /FontHeight get currentfontsize mul rlineto
+    neg 0 rlineto
+    closepath
+    bgcolor aload pop setrgbcolor
+    fill
+  grestore
+} bind def
+
+% Draw bg for a string
+% string --
+/dobackgroundstring {
+  stringwidth pop
+  dobackground
+} bind def
+
+
+/BG {
+  dup /bg exch store
+  { mark 4 1 roll ] /bgcolor exch store } if
+} bind def
+
+
+/Show {
+  bg { dup dobackgroundstring } if
+  ul { dup dounderlinestring } if
+  bx { dup doboxstring } if
+  show
+} bind def
+
+% Function T(ab), jumps to the n-th tabulation in the current line
+/T {
+  cw mul x0 add
+  bg { dup currentpoint pop sub dobackground } if
+  ul { dup currentpoint pop sub dounderline } if
+  bx { dup currentpoint pop sub dobox } if
+  y0 moveto
+} bind def
+
+% Function n: move to the next line
+/n {
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+} bind def
+
+% Function N: show and move to the next line
+/N {
+  Show
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+} bind def
+
+/S {
+  Show
+} bind def
+
+%%BeginResource: procset a2ps-a2ps-hdr 2.0 2
+%%Copyright: (c) 1988, 89, 90, 91, 92, 93 Miguel Santana
+%%Copyright: (c) 1995, 96, 97, 98 Akim Demaille, Miguel Santana
+% Function title: prints page header.
+% <ct> <rt> <lt> are passed as argument
+/title { 
+  % 1. Draw the background
+  x v get y v get moveto
+  gsave
+    0 th 2 div neg rmoveto 
+    th setlinewidth
+    0.95 setgray
+    pw 0 rlineto stroke
+  grestore
+  % 2. Border it
+  gsave
+    0.7 setlinewidth
+    pw 0 rlineto
+    0 th neg rlineto
+    pw neg 0 rlineto
+    closepath stroke
+  grestore
+  % stk: ct rt lt
+  x v get y v get th sub 1 add moveto
+%%IncludeResource: font Helvetica
+  fHelvetica fnfs 0.8 mul scalefont setfont
+  % 3. The left title
+  gsave
+    dup stringwidth pop fnfs 0.8 mul add exch % leave space took on stack
+    fnfs 0.8 mul hm rmoveto
+    show			% left title
+  grestore
+  exch
+  % stk: ct ltw rt
+  % 4. the right title
+  gsave
+    dup stringwidth pop fnfs 0.8 mul add exch % leave space took on stack
+    dup
+    pw exch stringwidth pop fnfs 0.8 mul add sub
+    hm
+    rmoveto
+    show			% right title
+  grestore
+  % stk: ct ltw rtw
+  % 5. the center title
+  gsave
+    pw 3 1 roll
+    % stk: ct pw ltw rtw
+    3 copy 
+    % Move to the center of the left room
+    sub add 2 div hm rmoveto
+    % What is the available space in here?
+    add sub fnfs 0.8 mul sub fnfs 0.8 mul sub
+    % stk: ct space_left
+%%IncludeResource: font Helvetica-Bold
+  fHelvetica-Bold fnfs scalefont setfont
+    cfshow
+  grestore
+} bind def
+
+% Function border: prints virtual page border
+/border { %def
+  gsave				% print four sides
+    0 setgray
+    x v get y v get moveto
+    0.7 setlinewidth		% of the square
+    pw 0 rlineto
+    0 ph neg rlineto
+    pw neg 0 rlineto
+    closepath stroke
+  grestore
+} bind def
+
+% Function water: prints a water mark in background
+/water { %def
+  gsave
+    scx scy moveto rotate
+%%IncludeResource: font Times-Bold
+  fTimes-Bold 100 scalefont setfont
+    .97 setgray
+    dup stringwidth pop 2 div neg -50 rmoveto
+    show
+  grestore
+} bind def
+
+% Function rhead: prints the right header
+/rhead {  %def
+  lx ly moveto
+  fHelvetica fnfs 0.8 mul scalefont setfont
+  l-show
+} bind def
+
+% Function footer (cf rf lf -> -)
+/footer {
+  fHelvetica fnfs 0.8 mul scalefont setfont
+  dx dy moveto
+  show
+
+  snx sny moveto
+  l-show
+  
+  fnx fny moveto
+  c-show
+} bind def
+%%EndResource
+%%BeginResource: procset a2ps-black+white-Prolog 2.0 1
+
+% Function T(ab), jumps to the n-th tabulation in the current line
+/T { 
+  cw mul x0 add y0 moveto
+} bind def
+
+% Function n: move to the next line
+/n { %def
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+} bind def
+
+% Function N: show and move to the next line
+/N {
+  Show
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+}  bind def
+
+/S {
+  Show
+} bind def
+
+/p {
+  false UL
+  false BX
+  fCourier bfs scalefont setfont
+  Show
+} bind def
+
+/sy {
+  false UL
+  false BX
+  fSymbol bfs scalefont setfont
+  Show
+} bind def
+
+/k {
+  false UL
+  false BX
+  fCourier-Oblique bfs scalefont setfont
+  Show
+} bind def
+
+/K {
+  false UL
+  false BX
+  fCourier-Bold bfs scalefont setfont
+  Show
+} bind def
+
+/c {
+  false UL
+  false BX
+  fCourier-Oblique bfs scalefont setfont
+  Show
+} bind def
+
+/C {
+  false UL
+  false BX
+  fCourier-BoldOblique bfs scalefont setfont
+  Show 
+} bind def
+
+/l {
+  false UL
+  false BX
+  fHelvetica bfs scalefont setfont
+  Show
+} bind def
+
+/L {
+  false UL
+  false BX
+  fHelvetica-Bold bfs scalefont setfont
+  Show 
+} bind def
+
+/str{
+  false UL
+  false BX
+  fTimes-Roman bfs scalefont setfont
+  Show
+} bind def
+
+/e{
+  false UL
+  true BX
+  fHelvetica-Bold bfs scalefont setfont
+  Show
+} bind def
+
+%%EndResource
+%%EndProlog
+%%BeginSetup
+%%IncludeResource: font Courier
+%%IncludeResource: font Courier-Oblique
+%%IncludeResource: font Courier-Bold
+%%IncludeResource: font Times-Roman
+%%IncludeResource: font Symbol
+%%IncludeResource: font Courier-BoldOblique
+%%BeginResource: encoding ISO-8859-1Encoding
+/ISO-8859-1Encoding [
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/space /exclam /quotedbl /numbersign /dollar /percent /ampersand /quoteright 
+/parenleft /parenright /asterisk /plus /comma /minus /period /slash 
+/zero /one /two /three /four /five /six /seven 
+/eight /nine /colon /semicolon /less /equal /greater /question 
+/at /A /B /C /D /E /F /G 
+/H /I /J /K /L /M /N /O 
+/P /Q /R /S /T /U /V /W 
+/X /Y /Z /bracketleft /backslash /bracketright /asciicircum /underscore 
+/quoteleft /a /b /c /d /e /f /g 
+/h /i /j /k /l /m /n /o 
+/p /q /r /s /t /u /v /w 
+/x /y /z /braceleft /bar /braceright /asciitilde /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/space /exclamdown /cent /sterling /currency /yen /brokenbar /section 
+/dieresis /copyright /ordfeminine /guillemotleft /logicalnot /hyphen /registered /macron 
+/degree /plusminus /twosuperior /threesuperior /acute /mu /paragraph /bullet 
+/cedilla /onesuperior /ordmasculine /guillemotright /onequarter /onehalf /threequarters /questiondown 
+/Agrave /Aacute /Acircumflex /Atilde /Adieresis /Aring /AE /Ccedilla 
+/Egrave /Eacute /Ecircumflex /Edieresis /Igrave /Iacute /Icircumflex /Idieresis 
+/Eth /Ntilde /Ograve /Oacute /Ocircumflex /Otilde /Odieresis /multiply 
+/Oslash /Ugrave /Uacute /Ucircumflex /Udieresis /Yacute /Thorn /germandbls 
+/agrave /aacute /acircumflex /atilde /adieresis /aring /ae /ccedilla 
+/egrave /eacute /ecircumflex /edieresis /igrave /iacute /icircumflex /idieresis 
+/eth /ntilde /ograve /oacute /ocircumflex /otilde /odieresis /divide 
+/oslash /ugrave /uacute /ucircumflex /udieresis /yacute /thorn /ydieresis 
+] def
+%%EndResource
+% Initialize page description variables.
+/sh 842 def
+/sw 595 def
+/llx 24 def
+/urx 571 def
+/ury 818 def
+/lly 24 def
+/#copies 1 def
+/th 15.000000 def
+/fnfs 11 def
+/bfs 5.160108 def
+/cw 3.096065 def
+
+% Dictionary for ISO-8859-1 support
+/iso1dict 8 dict begin
+  /fCourier ISO-8859-1Encoding /Courier reencode_font
+  /fCourier-Bold ISO-8859-1Encoding /Courier-Bold reencode_font
+  /fCourier-BoldOblique ISO-8859-1Encoding /Courier-BoldOblique reencode_font
+  /fCourier-Oblique ISO-8859-1Encoding /Courier-Oblique reencode_font
+  /fHelvetica ISO-8859-1Encoding /Helvetica reencode_font
+  /fHelvetica-Bold ISO-8859-1Encoding /Helvetica-Bold reencode_font
+  /fTimes-Bold ISO-8859-1Encoding /Times-Bold reencode_font
+  /fTimes-Roman ISO-8859-1Encoding /Times-Roman reencode_font
+currentdict end def
+/bgcolor [ 0 0 0 ] def
+/bg false def
+/ul false def
+/bx false def
+% The font for line numbering
+/f# /Helvetica findfont bfs .6 mul scalefont def
+/fSymbol /Symbol findfont def
+/hm fnfs 0.25 mul def
+/pw
+   cw 86.400000 mul
+def
+/ph
+   359.659534 th add
+def
+/pmw urx llx sub pw 2 mul sub 1 div def
+/pmh ury lly sub ph 2 mul sub 24 sub 1 div def
+/v 0 def
+/x [
+  0
+  dup pmw add pw add
+  0
+  dup pmw add pw add
+] def
+/y [
+  pmh ph add 1 mul ph add
+  dup
+  pmh ph add 0 mul ph add
+  dup
+] def
+/scx sw 2 div def
+/scy sh 2 div def
+/snx urx def
+/sny lly 2 add def
+/dx llx def
+/dy sny def
+/fnx scx def
+/fny dy def
+/lx snx def
+/ly ury fnfs 0.8 mul sub def
+/sx 5 def
+/tab 8 def
+/x0 0 def
+/y0 0 def
+%%EndSetup
+
+%%Page: (1-4) 1
+%%BeginPageSetup
+/pagesave save def
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 2.167245 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(1) # (#!/usr/bin/env ruby) p n
+(2) # () N
+(3) # (# $Id: ls-lR.rb 24 2004-07-30 06:24:36Z shugo $) N
+(4) # (# <URL:http://svn.shugo.net/src/llw2004/trunk/ls-lR.rb>) N
+(5) # () N
+(6) # (require "shellwords") N
+(7) # () N
+(8) # (module LsLR) N
+(9) # (  class Node) N
+(10) # (    attr_reader :line, :parent, :name, :size) N
+(11) # () N
+(12) # (    def initialize\(line, parent, name, size\)) N
+(13) # (      @line = line) N
+(14) # (      @parent = parent) N
+(15) # (      @name = name) N
+(16) # (      @size = size) N
+(17) # (    end) N
+(18) # () N
+(19) # (    def to_s) N
+(20) # (      return @line) N
+(21) # (    end) N
+(22) # () N
+(23) # (    def path) N
+(24) # (      if parent.nil?) N
+(25) # (        return "/") N
+(26) # (      end) N
+(27) # (      return File.expand_path\(name, parent.path\)) N
+(28) # (    end) N
+(29) # () N
+(30) # (    def relative_path\(base\)) N
+(31) # (      if base == self) N
+(32) # (        return ".") N
+(33) # (      end) N
+(34) # (      return File.join\(parent.relative_path\(base\), name\)) N
+(35) # (    end) N
+(36) # () N
+(37) # (    def directory?) N
+(38) # (      return false) N
+(39) # (    end) N
+(40) # () N
+(41) # (    def accept\(visitor\)) N
+(42) # (      raise ScriptError, "subclass must override Node#accept") N
+(43) # (    end) N
+(44) # (  end) N
+(45) # () N
+(46) # (  class FileNode < Node) N
+(47) # (    def type) N
+(48) # (      return "f") N
+(49) # (    end) N
+(50) # () N
+(51) # (    def accept\(visitor\)) N
+(52) # (      visitor.visit_file\(self\)) N
+(53) # (    end) N
+(54) # (  end) N
+(55) # () N
+(56) # (  class DirectoryNode < Node) N
+(57) # (    attr_reader :children) N
+(58) # () N
+(59) # (    def initialize\(line, parent, name, size\)) N
+(60) # (      super) N
+(61) # (      @children = []) N
+(62) # (    end) N
+(63) # () N
+(64) # (    def type) N
+(65) # (      return "d") N
+(66) # (    end) N
+(67) # () N
+(68) # (    def get_child\(name\)) N
+(69) # (      child = children.detect { |child| child.name == name }) N
+(ls-lR.rb) (Page 1/8) (Jul 30, 04 15:24) title
+border
+/v 1 store
+/x0 x v get 2.167245 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(70) # (      if child.nil?) p n
+(71) # (        raise format\("no such file or directory - %s", name\)) N
+(72) # (      end) N
+(73) # (      return child) N
+(74) # (    end) N
+(75) # () N
+(76) # (    def get_descendant\(path\)) N
+(77) # (      first, rest = path.split\("/", 2\)) N
+(78) # (      child = get_child\(first\)) N
+(79) # (      if rest.nil?) N
+(80) # (        return child) N
+(81) # (      else) N
+(82) # (        return child.get_descendant\(rest\)) N
+(83) # (      end) N
+(84) # (    end) N
+(85) # () N
+(86) # (    def directory?) N
+(87) # (      return true) N
+(88) # (    end) N
+(89) # () N
+(90) # (    def accept\(visitor\)) N
+(91) # (      visitor.visit_directory\(self\)) N
+(92) # (    end) N
+(93) # (  end) N
+(94) # () N
+(95) # (  class Parser) N
+(96) # (    NODE_CLASSES = {) N
+(97) # (      "f" => FileNode,) N
+(98) # (      "d" => DirectoryNode) N
+(99) # (    }) N
+(100) # () N
+(101) # (    def initialize) N
+(102) # (      @input = nil) N
+(103) # (      @directories = nil) N
+(104) # (      @root_directory = nil) N
+(105) # (    end) N
+(106) # () N
+(107) # (    def parse\(input\)) N
+(108) # (      @input = input) N
+(109) # (      @directories = {}) N
+(110) # (      @root_directory = nil) N
+(111) # (      loop do ) N
+(112) # (        begin) N
+(113) # (          parse_files) N
+(114) # (        rescue EOFError) N
+(115) # (          break) N
+(116) # (        end) N
+(117) # (      end) N
+(118) # (      return @root_directory) N
+(119) # (    end) N
+(120) # () N
+(121) # (    private) N
+(122) # () N
+(123) # (    def parse_files) N
+(124) # (      line = @input.readline) N
+(125) # (      dirname = line.slice\(/\(.*\):/n, 1\)) N
+(126) # (      if @directories.key?\(dirname\)) N
+(127) # (        dir = @directories[dirname]) N
+(128) # (      else) N
+(129) # (        dir = @root_directory =) N
+(130) # (          DirectoryNode.new\("", nil, "", 0\)) N
+(131) # (      end) N
+(132) # (      total = @input.readline) N
+(133) # (      @input.each_line do |line|) N
+(134) # (        line.chomp!) N
+(135) # (        break if line.empty?) N
+(136) # (        file = parse_file\(line, dir\)) N
+(137) # (        dir.children.push\(file\)) N
+(138) # (        if file.directory?) N
+(ls-lR.rb) (Page 2/8) (Jul 30, 04 15:24) title
+border
+/v 2 store
+/x0 x v get 2.167245 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(139) # (          @directories[File.join\(dirname, file.name\)] = file) p n
+(140) # (        end) N
+(141) # (      end ) N
+(142) # (      @directories.delete\(dirname\)) N
+(143) # (    end) N
+(144) # () N
+(145) # (    def parse_file\(line, parent\)) N
+(146) # (      m = /^\(.\)\\S+\\s+\\d+\\s+\\w+\\s+\\w+\\s+\(\\d+\)\\s+.{12}\\s+\(.*\)/n.match\(line\)) N
+(147) # (      type = m[1].tr\("-", "f"\)) N
+(148) # (      size = m[2].to_i) N
+(149) # (      name = m[3]) N
+(150) # (      file = NODE_CLASSES[type].new\(line, parent, name, size\)) N
+(151) # (    end) N
+(152) # (  end) N
+(153) # () N
+(154) # (  class Command) N
+(155) # (    attr_reader :shell) N
+(156) # () N
+(157) # (    def initialize\(shell\)) N
+(158) # (      @shell = shell) N
+(159) # (    end) N
+(160) # () N
+(161) # (    def exec\(args\)) N
+(162) # (      raise ScriptError, "subclass must override Command#exec") N
+(163) # (    end) N
+(164) # (  end) N
+(165) # () N
+(166) # (  class NullCommand < Command) N
+(167) # (    def exec\(args\)) N
+(168) # (      raise "no such command") N
+(169) # (    end) N
+(170) # (  end) N
+(171) # () N
+(172) # (  class QuitCommand < Command) N
+(173) # (    def exec\(args\)) N
+(174) # (      exit) N
+(175) # (    end) N
+(176) # (  end) N
+(177) # () N
+(178) # (  class PwdCommand < Command) N
+(179) # (    def exec\(args\)) N
+(180) # (      shell.print\(shell.current_directory.path, "\\n"\)) N
+(181) # (    end) N
+(182) # (  end) N
+(183) # () N
+(184) # (  class CdCommand < Command) N
+(185) # (    def exec\(args\)) N
+(186) # (      if args.length < 1) N
+(187) # (        return) N
+(188) # (      end) N
+(189) # (      path = args[0]) N
+(190) # (      dir = shell.get_file\(path\)) N
+(191) # (      unless dir.directory?) N
+(192) # (        raise format\("not a directory - %s\\n", path\)) N
+(193) # (      end) N
+(194) # (      shell.current_directory = dir) N
+(195) # (    end) N
+(196) # (  end) N
+(197) # () N
+(198) # (  class LsCommand < Command) N
+(199) # (    def exec\(args\)) N
+(200) # (      shell.current_directory.children.each do |file|) N
+(201) # (        shell.print\(file, "\\n"\)) N
+(202) # (      end) N
+(203) # (    end) N
+(204) # (  end) N
+(205) # () N
+(206) # (  class Expression) N
+(207) # (    def evaluate\(file\)) N
+(ls-lR.rb) (Page 3/8) (Jul 30, 04 15:24) title
+border
+/v 3 store
+/x0 x v get 2.167245 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(208) # (      raise ScriptError, "subclass must override Expression#evaluate") p n
+(209) # (    end) N
+(210) # () N
+(211) # (    def null?) N
+(212) # (      return false) N
+(213) # (    end) N
+(214) # (  end) N
+(215) # () N
+(216) # (  class NullExpression) N
+(217) # (    def evaluate\(file\)) N
+(218) # (      return true) N
+(219) # (    end) N
+(220) # () N
+(221) # (    def null?) N
+(222) # (      return true) N
+(223) # (    end) N
+(224) # (  end) N
+(225) # () N
+(226) # (  class SimpleExpression < Expression) N
+(227) # (    def initialize\(value\)) N
+(228) # (      @value = value) N
+(229) # (    end) N
+(230) # (  end) N
+(231) # () N
+(232) # (  class NameExpression < SimpleExpression) N
+(233) # (    def evaluate\(file\)) N
+(234) # (      return File.fnmatch\(@value, file.name\)) N
+(235) # (    end) N
+(236) # (  end) N
+(237) # () N
+(238) # (  class TypeExpression < SimpleExpression) N
+(239) # (    def evaluate\(file\)) N
+(240) # (      return file.type == @value) N
+(241) # (    end) N
+(242) # (  end) N
+(243) # () N
+(244) # (  class SizeEqExpression < SimpleExpression) N
+(245) # (    def evaluate\(file\)) N
+(246) # (      return file.size == @value) N
+(247) # (    end) N
+(248) # (  end) N
+(249) # () N
+(250) # (  class SizeLtExpression < SimpleExpression) N
+(251) # (    def evaluate\(file\)) N
+(252) # (      return file.size < @value) N
+(253) # (    end) N
+(254) # (  end) N
+(255) # () N
+(256) # (  class SizeGtExpression < SimpleExpression) N
+(257) # (    def evaluate\(file\)) N
+(258) # (      return file.size > @value) N
+(259) # (    end) N
+(260) # (  end) N
+(261) # () N
+(262) # (  class NotExpression < Expression) N
+(263) # (    def initialize\(expression\)) N
+(264) # (      @expression = expression) N
+(265) # (    end) N
+(266) # () N
+(267) # (    def evaluate\(file\)) N
+(268) # (      return !@expression.evaluate\(file\)) N
+(269) # (    end) N
+(270) # (  end) N
+(271) # () N
+(272) # (  class BinaryExpression < Expression) N
+(273) # (    def initialize\(left, right\)) N
+(274) # (      @left = left) N
+(275) # (      @right = right) N
+(276) # (    end) N
+(ls-lR.rb) (Page 4/8) (Jul 30, 04 15:24) title
+border
+grestore
+(Printed by Shugo Maeda) rhead
+() (1/2) (Friday August 06, 2004) footer
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (5-8) 2
+%%BeginPageSetup
+/pagesave save def
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 12 add translate
+/v 0 store
+/x0 x v get 2.167245 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(277) # (  end) p n
+(278) # () N
+(279) # (  class AndExpression < BinaryExpression) N
+(280) # (    def evaluate\(file\)) N
+(281) # (      return @left.evaluate\(file\) && @right.evaluate\(file\)) N
+(282) # (    end) N
+(283) # (  end) N
+(284) # () N
+(285) # (  class OrExpression < BinaryExpression) N
+(286) # (    def evaluate\(file\)) N
+(287) # (      return @left.evaluate\(file\) || @right.evaluate\(file\)) N
+(288) # (    end) N
+(289) # (  end) N
+(290) # () N
+(291) # (  class FindExpressionParser) N
+(292) # (    def initialize) N
+(293) # (      @tokens = nil) N
+(294) # (    end) N
+(295) # () N
+(296) # (    def parse\(tokens\)) N
+(297) # (      @tokens = tokens.dup) N
+(298) # (      return exprs) N
+(299) # (    end) N
+(300) # () N
+(301) # (    private) N
+(302) # () N
+(303) # (    def exprs) N
+(304) # (      result = NullExpression.new) N
+(305) # (      loop do) N
+(306) # (        token = lookahead) N
+(307) # (        if token.nil? || token == "\)") N
+(308) # (          break) N
+(309) # (        end) N
+(310) # (        e = or_expr) N
+(311) # (        if result.null?) N
+(312) # (          result = e) N
+(313) # (        else) N
+(314) # (          result = AndExpression.new\(result, e\)) N
+(315) # (        end) N
+(316) # (      end) N
+(317) # (      return result) N
+(318) # (    end) N
+(319) # () N
+(320) # (    def or_expr) N
+(321) # (      result = and_expr) N
+(322) # (      while lookahead == "-o") N
+(323) # (        shift_token) N
+(324) # (        right = and_expr) N
+(325) # (        result = OrExpression.new\(result, right\)) N
+(326) # (      end) N
+(327) # (      return result) N
+(328) # (    end) N
+(329) # () N
+(330) # (    def and_expr) N
+(331) # (      result = not_expr) N
+(332) # (      while lookahead == "-a") N
+(333) # (        shift_token) N
+(334) # (        right = not_expr) N
+(335) # (        result = AndExpression.new\(result, right\)) N
+(336) # (      end) N
+(337) # (      return result) N
+(338) # (    end) N
+(339) # () N
+(340) # (    def not_expr) N
+(341) # (      if @tokens.first == "!") N
+(342) # (        shift_token) N
+(343) # (        return NotExpression.new\(not_expr\)) N
+(344) # (      else) N
+(345) # (        return primary_expr) N
+(ls-lR.rb) (Page 5/8) (Jul 30, 04 15:24) title
+border
+/v 1 store
+/x0 x v get 2.167245 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(346) # (      end) p n
+(347) # (    end) N
+(348) # () N
+(349) # (    def primary_expr) N
+(350) # (      case lookahead) N
+(351) # (      when "-name") N
+(352) # (        return name_expr) N
+(353) # (      when "-type") N
+(354) # (        return type_expr) N
+(355) # (      when "-size") N
+(356) # (        return size_expr) N
+(357) # (      when "\(") N
+(358) # (        return paren_expr) N
+(359) # (      else) N
+(360) # (        raise format\("unknown expression - %s", lookahead\)) N
+(361) # (      end) N
+(362) # (    end) N
+(363) # () N
+(364) # (    def name_expr) N
+(365) # (      shift_token) N
+(366) # (      val = shift_token) N
+(367) # (      return NameExpression.new\(val\)) N
+(368) # (    end) N
+(369) # () N
+(370) # (    def type_expr) N
+(371) # (      shift_token) N
+(372) # (      val = shift_token) N
+(373) # (      if !/\\A[fd]\\z/n.match\(val\)) N
+(374) # (        raise format\("invalid argument for -type - %s", val\)) N
+(375) # (      end) N
+(376) # (      return TypeExpression.new\(val\)) N
+(377) # (    end) N
+(378) # () N
+(379) # (    SIZE_EXPRESSION_CLASSES = {) N
+(380) # (      nil => SizeEqExpression,) N
+(381) # (      "+" => SizeGtExpression,) N
+(382) # (      "-" => SizeLtExpression) N
+(383) # (    }) N
+(384) # () N
+(385) # (    def size_expr) N
+(386) # (      shift_token) N
+(387) # (      val = shift_token) N
+(388) # (      m = /\\A\(\\+|-\)?\(\\d+\)\\z/n.match\(val\)) N
+(389) # (      if m.nil?) N
+(390) # (        raise format\("invalid argument for -size - %s", val\)) N
+(391) # (      end) N
+(392) # (      return SIZE_EXPRESSION_CLASSES[m[1]].new\(m[2].to_i\)) N
+(393) # (    end) N
+(394) # () N
+(395) # (    def paren_expr) N
+(396) # (      shift_token) N
+(397) # (      result = exprs) N
+(398) # (      match\("\)"\)) N
+(399) # (      return result) N
+(400) # (    end) N
+(401) # () N
+(402) # (    def lookahead) N
+(403) # (      return @tokens.first) N
+(404) # (    end) N
+(405) # () N
+(406) # (    def shift_token) N
+(407) # (      return @tokens.shift) N
+(408) # (    end) N
+(409) # () N
+(410) # (    def match\(pat\)) N
+(411) # (      token = shift_token) N
+(412) # (      unless pat === token) N
+(413) # (        raise format\("invalid token - %s \(expected %s\)", token, pat\)) N
+(414) # (      end) N
+(ls-lR.rb) (Page 6/8) (Jul 30, 04 15:24) title
+border
+/v 2 store
+/x0 x v get 2.167245 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(415) # (      return token) p n
+(416) # (    end) N
+(417) # (  end) N
+(418) # () N
+(419) # (  class DfsScheduler) N
+(420) # (    def initialize) N
+(421) # (      @stack = []) N
+(422) # (    end) N
+(423) # (    ) N
+(424) # (    def next_node) N
+(425) # (      return @stack.pop) N
+(426) # (    end) N
+(427) # () N
+(428) # (    def schedule\(nodes\)) N
+(429) # (      @stack.concat\(nodes.reverse\)) N
+(430) # (    end) N
+(431) # (  end) N
+(432) # (  ) N
+(433) # (  class BfsScheduler) N
+(434) # (    def initialize) N
+(435) # (      @queue = []) N
+(436) # (    end) N
+(437) # (    ) N
+(438) # (    def next_node) N
+(439) # (      return @queue.shift) N
+(440) # (    end) N
+(441) # () N
+(442) # (    def schedule\(nodes\)) N
+(443) # (      @queue.concat\(nodes\)) N
+(444) # (    end) N
+(445) # (  end) N
+(446) # () N
+(447) # (  class SearchCommand < Command) N
+(448) # (    def initialize\(shell, scheduler\)) N
+(449) # (      super\(shell\)) N
+(450) # (      @expr_parser = FindExpressionParser.new) N
+(451) # (      @scheduler = scheduler) N
+(452) # (    end) N
+(453) # () N
+(454) # (    def exec\(args\)) N
+(455) # (      @expr = @expr_parser.parse\(args\)) N
+(456) # (      @scheduler.schedule\([@shell.current_directory]\)) N
+(457) # (      while node = @scheduler.next_node) N
+(458) # (        node.accept\(self\)) N
+(459) # (      end) N
+(460) # (    end) N
+(461) # () N
+(462) # (    def visit_file\(file\)) N
+(463) # (      if @expr.evaluate\(file\)) N
+(464) # (        shell.print\(file.relative_path\(@shell.current_directory\), "\\n"\)) N
+(465) # (      end) N
+(466) # (    end) N
+(467) # () N
+(468) # (    def visit_directory\(dir\)) N
+(469) # (      visit_file\(dir\)) N
+(470) # (      @scheduler.schedule\(dir.children\)) N
+(471) # (    end) N
+(472) # (  end) N
+(473) # () N
+(474) # (  class Shell) N
+(475) # (    attr_reader :root_directory) N
+(476) # (    attr_accessor :current_directory) N
+(477) # () N
+(478) # (    def initialize) N
+(479) # (      @current_directory = nil) N
+(480) # (      null_cmd = NullCommand.new\(self\)) N
+(481) # (      @commands = Hash.new\(null_cmd\)) N
+(482) # (      @commands["quit"] = @commands["exit"] = QuitCommand.new\(self\)) N
+(483) # (      @commands["pwd"] = PwdCommand.new\(self\)) N
+(ls-lR.rb) (Page 7/8) (Jul 30, 04 15:24) title
+border
+/v 3 store
+/x0 x v get 2.167245 add sx cw mul add store
+/y0 y v get bfs th add sub store
+x0 y0 moveto
+(484) # (      @commands["cd"] = CdCommand.new\(self\)) p n
+(485) # (      @commands["ls"] = LsCommand.new\(self\)) N
+(486) # (      dfs_scheduler = DfsScheduler.new) N
+(487) # (      @commands["dfs"] = SearchCommand.new\(self, dfs_scheduler\)) N
+(488) # (      bfs_scheduler = BfsScheduler.new) N
+(489) # (      @commands["bfs"] = SearchCommand.new\(self, bfs_scheduler\)) N
+(490) # (    end) N
+(491) # () N
+(492) # (    def run\(filename\)) N
+(493) # (      parser = Parser.new) N
+(494) # (      @current_directory = @root_directory =) N
+(495) # (        open\(filename\) { |f| parser.parse\(f\) }) N
+(496) # (      each_cmd do |cmd, *args|) N
+(497) # (        begin) N
+(498) # (          @commands[cmd].exec\(args\)) N
+(499) # (        rescue) N
+(500) # (          print\($!, "\\n"\)) N
+(501) # (        end) N
+(502) # (      end) N
+(503) # (    end) N
+(504) # () N
+(505) # (    def get_file\(path\)) N
+(506) # (      abs_path = File.expand_path\(path, current_directory.path\)) N
+(507) # (      return root_directory if abs_path == "/") N
+(508) # (      rel_path = abs_path.sub\(/^\\//n, ""\)) N
+(509) # (      return root_directory.get_descendant\(rel_path\)) N
+(510) # (    end) N
+(511) # () N
+(512) # (    def print\(*args\)) N
+(513) # (      $stdout.print\(*args\)) N
+(514) # (    end) N
+(515) # () N
+(516) # (    private) N
+(517) # () N
+(518) # (    def each_cmd) N
+(519) # (      while line = readline) N
+(520) # (        yield\(Shellwords.shellwords\(line\)\)) N
+(521) # (      end) N
+(522) # (    end) N
+(523) # () N
+(524) # (    def readline) N
+(525) # (      if $stdin.tty?) N
+(526) # (        $stdout.print\("ls-lR> "\)) N
+(527) # (        $stdout.flush) N
+(528) # (      end) N
+(529) # (      return $stdin.gets) N
+(530) # (    end) N
+(531) # (  end) N
+(532) # (end) N
+(533) # () N
+(534) # (if $0 == __FILE__) N
+(535) # (  if ARGV.length < 1) N
+(536) # (    STDERR.printf\("usage: %s <ls-lR file>\\n", $0\)) N
+(537) # (    exit\(1\)) N
+(538) # (  end) N
+(539) # (  filename = ARGV.shift) N
+(540) # (  shell = LsLR::Shell.new) N
+(541) # (  shell.run\(filename\)) N
+(542) # (end) N
+(ls-lR.rb) (Page 8/8) (Jul 30, 04 15:24) title
+border
+grestore
+(Printed by Shugo Maeda) rhead
+() (Friday August 06, 2004) (2/2) footer
+end % of iso1dict
+pagesave restore
+showpage
+
+%%Trailer
+end
+%%EOF
